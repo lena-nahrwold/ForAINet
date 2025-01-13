@@ -151,6 +151,28 @@ cd /$YOURPATH$/ForAINet/superpoint_graph/partition
 python partition_FORdata.py
 ```
 
+# Handling large point clouds: a workflow for tiling, predicting, and merging:
+
+For large point clouds, we provide the code to process them seamlessly. The workflow involves the following steps:
+
+1. Splitting the point cloud: use split_largePC_to_tiles.py to divide the large point cloud into fixed-size tiles (default: 50m tiles with 5m overlap).
+2. Predicting for each tile: run predictions on each tile using generate_eval_command.py.
+3. Merging results: combine the results of all tiles back into the original point cloud using merge_tiles.py.
+All these operations can be easily executed with the large_PC_predict.sh command:
+
+```bash
+# modify parameters in large_PC_predict.sh:
+# base_path: your project directory
+# tile_size and overlap
+# src_dir: specify the directory where your model is stored
+
+# modify parameters in exampleeval.yaml:
+# checkpoint_dir: the location of your model checkpoint
+# data.fold: the paths of the point cloud files you want to test
+
+bash large_PC_predict.sh
+```
+
 # Citing
 If you find our work useful, please do not hesitate to cite it:
 
