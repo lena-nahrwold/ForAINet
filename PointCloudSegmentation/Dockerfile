@@ -251,7 +251,7 @@ RUN apt-get clean && \
 FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04 AS final
 
 # Set timezone
-RUN ln -fs /usr/share/zoneinfo/Europe/Oslo /etc/localtime
+RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
 
 # Copy only necessary files and packages from the builder stage
 # Only copy necessary files from the builder stage
