@@ -1,0 +1,23 @@
+defaults:
+- visualization: eval
+num_workers: 0
+batch_size: 1
+cuda: 0
+weight_name: latest
+enable_cudnn: true
+checkpoint_dir: /dpb/models
+model_name: PointGroup-PAPER_latest
+precompute_multi_scale: true
+enable_dropout: false
+voting_runs: 1
+data:
+  fold:
+  - /dpb/data/reference_xyz.ply
+
+tracker_options:
+  full_res: true
+  make_submission: true
+  ply_output: uwg_eval.ply
+hydra:
+  run:
+    dir: /dpb/output/eval/${now:%Y-%m-%d_%H-%M-%S}
