@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04 as builder
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 # FROM nvidia/cuda:10.2-devel-ubuntu18.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -247,18 +247,8 @@ RUN apt-get clean && \
     \) -exec rm -rf '{}' + ;
 
 
-# Stage 2: Final stage
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04 AS final
-
 # Set timezone
 RUN ln -fs /usr/share/zoneinfo/Europe/Berlin /etc/localtime
-
-# Copy only necessary files and packages from the builder stage
-# Only copy necessary files from the builder stage
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /usr/local/lib /usr/local/lib
-COPY --from=builder /usr/local/include /usr/local/include
-
 
 # Install Python and other essential packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -269,17 +259,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     unzip \
     zip \
-    # ... (any other packages that are required at runtime) ...
+    vim \
     && rm -rf /var/lib/apt/lists/*
-
-
 
 RUN python3.8 -m pip install --no-cache-dir \
     numba==0.57.1 \
     numpy==1.24.4 \
-    jaklas \
     dask==2021.8.1 \
     pykdtree==1.3.7.post0
 
-# run training
-CMD ["bash", "-c", "while true; do sleep 1000; done"]
+WORKDIR /dpb
+
+COPY . .

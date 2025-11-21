@@ -12,14 +12,12 @@ def generate_eval_command(ply_paths, eval_script="eval.py"):
     escaped_fold_argument = fold_argument.replace('"', '\\"')
 
     # Generate the full main.py command
-    eval_command = f'python {eval_script} data.fold="{escaped_fold_argument}"'
+    eval_command = f'python3 {eval_script} data.fold="{escaped_fold_argument}"'
     
     return eval_command
 
 def main():
     # Path to the ply_output_files.txt
-    # ply_output_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/data_test/tiles_50_ULS_Åsmåsan_VUX1_2017_80_120mAGL/ply_output_file_paths.txt'
-    
     parser = argparse.ArgumentParser(description="Generate evaluation commands.")
     parser.add_argument('--ply_output_file', type=str, required=True, help='Path to the ply output file paths.')
 

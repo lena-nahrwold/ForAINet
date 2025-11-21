@@ -1,15 +1,20 @@
 num_workers: 2
 batch_size: 16
-cuda: 0
-weight_name: "miou" # Used during resume, select with model to load from [miou, macc, acc..., latest]
+cuda: 1
+weight_name: "latest"
 enable_cudnn: True
-checkpoint_dir: "/home/lena.nahrwold/master-thesis/ForAINet/ForAINet/PointCloudSegmentation/forward_scripts/output/2025-09-03/13-12-00" # "{your_path}/outputs/2020-01-28/11-04-13" for example
-model_name: TOTO
+
+checkpoint_dir: "/dpb"
+model_name: PointGroup-PAPER_latest
 enable_dropout: False
-output_path: "/home/lena.nahrwold/master-thesis/ForAINet/ForAINet/PointCloudSegmentation/forward_scripts/output" # Where the output goes
-input_path: "/home/lena.nahrwold/master-thesis/ForAINet/ForAINet/PointCloudSegmentation/forward_scripts/input" # Folder where to find the data
+
+output_path: "/dpb/forward_scripts/output"
+input_path: "/dpb/forward_scripts/input"
+
+data:
+  fold: 0
 
 # Dataset specific
 defaults:
-    - dataset: ""
-      optional: True
+  - dataset: ""
+    optional: True

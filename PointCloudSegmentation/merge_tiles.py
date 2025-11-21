@@ -24,7 +24,6 @@ def natural_sort_key(s):
 
 def create_base_dir(base_dir):
     """Create base_dir and return its path"""
-    #base_dir = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/outputs/tree_mix/all_tiles_outputs'
     if not os.path.exists(base_dir):
         os.makedirs(base_dir)
     return base_dir
@@ -202,13 +201,6 @@ def main():
     output_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/outputs/tree_mix/merged_result.ply'
     original_point_cloud_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/data_test/ULS_Åsmåsan_VUX1_2017_80_120mAGL.ply'
     '''
-    #src_dir = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/outputs/tree_mix/eval'
-    #ply_output_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/data_set4classes/BlueCat/tiles_50_RN_merged_trees_panoptic/ply_output_file_paths.txt'
-    #base_dir = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/outputs/tree_mix/all_tiles_outputs_RN_merged_trees_panoptic'
-    #output_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/outputs/tree_mix/merged_result_new.ply'
-    #original_point_cloud_file = '/home/ubuntu/binbin/OutdoorPanopticSeg_V2/data_set4classes/BlueCat/RN_merged_trees_panoptic.ply'
-
-
     parser = argparse.ArgumentParser(description="Merge tiles into a single point cloud.")
     parser.add_argument('--src_dir', type=str, required=True, help='Source directory containing tile evaluation results.')
     parser.add_argument('--ply_output_file', type=str, required=True, help='Path to the ply output file paths.')
@@ -238,11 +230,6 @@ def main():
     else:
         # Multiple tiles, proceed with merging
         merge_tiles(base_dir, output_file, original_point_cloud_file, tile_size=100, overlap=args.overlap)
-        #merge_tiles(base_dir, output_file, original_point_cloud_file, tile_size=100, overlap=5)
-
-
-    #collect_and_rename_files(src_dir, base_dir, ply_output_file)
-    #merge_tiles(base_dir, output_file, original_point_cloud_file, tile_size=100, overlap=5)
 
 if __name__ == "__main__":
     main()

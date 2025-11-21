@@ -1,2 +1,10 @@
 /PointCloudSegmentation/forward_scripts/output/*
+/PointCloudSegmentation/forward_scripts/outputs/*
 /PointCloudSegmentation/forward_scripts/input/*
+/PointCloudSegmentation/data
+/PointCloudSegmentation/outputs
+/PointCloudSegmentation/output
+/PointCloudSegmentation/eval
+*/__pycache__/
+__pycache__/
+/PointCloudSegmentation/models/*

@@ -7,6 +7,11 @@ import sys
 import numpy as np
 from typing import Dict
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 DIR = os.path.dirname(os.path.realpath(__file__))
 ROOT = os.path.join(DIR, "..")
@@ -40,6 +45,7 @@ def save(prefix, predicted):
 def run(model: BaseModel, dataset, device, output_path):
     loaders = dataset.test_dataloaders
     predicted: Dict = {}
+
     for loader in loaders:
         loader.dataset.name
         with Ctq(loader) as tq_test_loader:
@@ -54,6 +60,11 @@ def run(model: BaseModel, dataset, device, output_path):
 
 @hydra.main(config_path="conf/config.yaml")
 def main(cfg):
+    import torch
+    ckpt = torch.load("/dpb/PointGroup-PAPER_latest.pt", map_location="cpu")
+    print(ckpt["run_config"])
+
+    print(cfg)
     OmegaConf.set_struct(cfg, False)
 
     # Get device
@@ -64,7 +75,7 @@ def main(cfg):
     torch.backends.cudnn.enabled = cfg.enable_cudnn
 
     # Checkpoint
-    checkpoint = ModelCheckpoint(cfg.checkpoint_dir, cfg.model_name, cfg.weight_name, strict=True)
+    checkpoint = ModelCheckpoint(cfg.checkpoint_dir, cfg.model_name, cfg.weight_name, run_config=cfg, strict=True)
 
     # Setup the dataset config
     # Generic config
@@ -87,9 +98,14 @@ def main(cfg):
 
     # Set dataloaders
     dataset = instantiate_dataset(checkpoint.data_config)
+    print("Dataset config:", checkpoint.data_config)
+    print("Dataset class:", train_dataset_cls)
+
     dataset.create_dataloaders(
         model, cfg.batch_size, cfg.shuffle, cfg.num_workers, False,
     )
+    print("Test loaders:", dataset.test_dataloaders)
+
     log.info(dataset)
 
     model.eval()

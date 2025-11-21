@@ -6,6 +6,8 @@ from torch_points3d.trainer import Trainer
 
 @hydra.main(config_path="conf", config_name="eval")
 def main(cfg):
+    print("Used eval conf:")
+    print(cfg.pretty())
     OmegaConf.set_struct(cfg, False)  # This allows getattr and hasattr methods to function correctly
     if cfg.pretty_print:
         print(OmegaConf.to_yaml(cfg))

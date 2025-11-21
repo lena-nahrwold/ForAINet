@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Base path   ###adapt
-base_path="YOURLOCATION/ForAINet/PointCloudSegmentation/"
+base_path="/dpb"
 
 # Path to the eval.yaml file   ###adapt
-yaml_file="${base_path}/exampleeval.yaml"
+yaml_file="${base_path}/conf/large_PC_predict_eval.yaml"
 
 # Function to read paths from eval.yaml
 read_yaml() {
@@ -39,35 +39,18 @@ for i in "${!large_ply_files[@]}"; do
     base_dir="${directory}/${new_folder_name}"
     ply_output_file_paths="${base_dir}/ply_output_file_paths.txt"
 
-    # Clear the eval directory using src_dir before Step 2   ###adapt
-    src_dir="${base_path}/outputs/tree_mix/eval"
+    src_dir="${base_path}/output/eval"
     rm -rf "${src_dir}"
-
-    # Delete all folders containing "test" in the name
-    data_set_path="${base_path}/data_set1_5classes/treeinsfused/"
-    test_folders=$(find "$data_set_path" -type d -name '*test*')
-    
-    echo "Found test folders:"
-    echo "$test_folders"
-    
-    if [ -n "$test_folders" ]; then
-        find "$data_set_path" -type d -name '*test*' -exec rm -rf {} +
-        echo "Deleted test folders."
-    else
-        echo "No test folders found."
-    fi
-
-    sleep 60
 
     # Step 2: Generate eval commands
     python3 ${base_path}/generate_eval_command.py --ply_output_file "$ply_output_file_paths"
 
     # Wait for eval commands to complete, add some sleep time to ensure commands are executed
-    # sleep 60  # Adjust the time according to the actual situation
+    sleep 60  # Adjust the time according to the actual situation
 
     # Step 3: Merge  
-    all_tiles_outputs="${base_path}/outputs/tree_mix/all_tiles_outputs_${file_name}"
-    merged_result="${base_path}/outputs/tree_mix/merged_result_${file_name}.ply"
+    all_tiles_outputs="${base_path}/output/all_tiles_outputs_${file_name}"
+    merged_result="${base_path}/output/merged_result_${file_name}.ply"
     
     python3 ${base_path}/merge_tiles.py \
         --src_dir "$src_dir" \

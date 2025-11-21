@@ -1,4 +1,5 @@
-FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+#FROM nvidia/cuda:12.2.2-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 
 # Avoid warnings by switching to noninteractive
 ENV DEBIAN_FRONTEND=noninteractive
