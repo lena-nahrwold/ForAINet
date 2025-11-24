@@ -20,10 +20,12 @@ def get_dataset_class(dataset_config):
     dataset_paths = dataset_class.split(".")
     module = ".".join(dataset_paths[:-1])
     class_name = dataset_paths[-1]
+
     dataset_module = ".".join(["torch_points3d.datasets", task, module])
     datasetlib = importlib.import_module(dataset_module)
 
     target_dataset_name = class_name
+    dataset_cls = None
     for name, cls in datasetlib.__dict__.items():
         if name.lower() == target_dataset_name.lower() and issubclass(cls, BaseDataset):
             dataset_cls = cls

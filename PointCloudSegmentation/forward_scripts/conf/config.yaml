@@ -4,17 +4,21 @@ cuda: 1
 weight_name: "latest"
 enable_cudnn: True
 
-checkpoint_dir: "/dpb"
+checkpoint_dir: "/dpb/models"
 model_name: PointGroup-PAPER_latest
 enable_dropout: False
 
-output_path: "/dpb/forward_scripts/output"
-input_path: "/dpb/forward_scripts/input"
+input_path: "/dpb/data"
+output_path: "/dpb/output"
 
 data:
-  fold: 0
+  task: custom
+  dataroot: "/dpb/data"
+  class: ufg_inference.PLYInferenceDataset
+  fold: []
+  num_classes: 5
 
 # Dataset specific
 defaults:
-  - dataset: ""
+  - dataset: "ufg_inference"
     optional: True

@@ -58,13 +58,13 @@ def run(model: BaseModel, dataset, device, output_path):
     save(output_path, predicted)
 
 
-@hydra.main(config_path="conf/config.yaml")
+@hydra.main(config_path="/dpb/forward_scripts/conf/config.yaml")
 def main(cfg):
     import torch
-    ckpt = torch.load("/dpb/PointGroup-PAPER_latest.pt", map_location="cpu")
-    print(ckpt["run_config"])
+    ckpt = torch.load("/dpb/models/PointGroup-PAPER_latest.pt", map_location="cpu")
 
-    print(cfg)
+    print(ckpt["run_config"]["data"])
+
     OmegaConf.set_struct(cfg, False)
 
     # Get device
@@ -80,26 +80,35 @@ def main(cfg):
     # Setup the dataset config
     # Generic config
     train_dataset_cls = get_dataset_class(checkpoint.data_config)
-    setattr(checkpoint.data_config, "class", train_dataset_cls.FORWARD_CLASS)
-    setattr(checkpoint.data_config, "dataroot", cfg.input_path)
+    #setattr(checkpoint.data_config, "class", train_dataset_cls.FORWARD_CLASS)
 
     # Datset specific configs
     if cfg.data:
         for key, value in cfg.data.items():
-            checkpoint.data_config.update(key, value)
+            #checkpoint.data_config.update(key, value)
+            checkpoint.data_config[key] = value
+
     if cfg.dataset_config:
         for key, value in cfg.dataset_config.items():
             checkpoint.dataset_properties.update(key, value)
 
-    # Create dataset and mdoel
-    model = checkpoint.create_model(checkpoint.dataset_properties, weight_name=cfg.weight_name)
+    # Create dataset and model
+    # Set dataloaders
+    #dataset = instantiate_dataset(checkpoint.data_config)
+    dataset = instantiate_dataset(cfg.data)
+
+    print("Dataset config:", checkpoint.data_config)
+    print("Dataset class:", train_dataset_cls)
+
+    model = checkpoint.create_model(dataset, weight_name=cfg.weight_name)
+
     log.info(model)
     log.info("Model size = %i", sum(param.numel() for param in model.parameters() if param.requires_grad))
 
-    # Set dataloaders
-    dataset = instantiate_dataset(checkpoint.data_config)
-    print("Dataset config:", checkpoint.data_config)
-    print("Dataset class:", train_dataset_cls)
+    model.eval()
+    if cfg.enable_dropout:
+        model.enable_dropout_in_eval()
+    model = model.to(device)
 
     dataset.create_dataloaders(
         model, cfg.batch_size, cfg.shuffle, cfg.num_workers, False,
@@ -107,11 +116,6 @@ def main(cfg):
     print("Test loaders:", dataset.test_dataloaders)
 
     log.info(dataset)
-
-    model.eval()
-    if cfg.enable_dropout:
-        model.enable_dropout_in_eval()
-    model = model.to(device)
 
     # Run training / evaluation
     if not os.path.exists(cfg.output_path):

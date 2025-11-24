@@ -1,0 +1,18 @@
+# @package data
+class: custom.ufg_inference.PLYInferenceDataset
+dataroot: /dpb/data/reference_xyz.ply
+first_subsampling: 0.2
+
+pre_collate_transform:
+  - transform: GridSampling3D
+    params:
+      size: ${data.first_subsampling}
+
+test_transform:
+  - transform: GridSampling3D
+    params:
+      size: ${data.first_subsampling}
+      quantize_coords: True
+
+val_transform: ${data.test_transform}
+train_transforms: []
