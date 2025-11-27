@@ -63,8 +63,6 @@ def main(cfg):
     import torch
     ckpt = torch.load("/dpb/models/PointGroup-PAPER_latest.pt", map_location="cpu")
 
-    print(ckpt["run_config"]["data"])
-
     OmegaConf.set_struct(cfg, False)
 
     # Get device
@@ -83,22 +81,38 @@ def main(cfg):
     #setattr(checkpoint.data_config, "class", train_dataset_cls.FORWARD_CLASS)
 
     # Datset specific configs
-    if cfg.data:
-        for key, value in cfg.data.items():
-            #checkpoint.data_config.update(key, value)
-            checkpoint.data_config[key] = value
+    #if cfg.data:
+    #    for key, value in cfg.data.items():
+    #        checkpoint.data_config.update(key, value)
+    #        #checkpoint.data_config[key] = value
+#
+    #if cfg.dataset_config:
+    #    for key, value in cfg.dataset_config.items():
+    #        checkpoint.dataset_properties.update(key, value)
 
-    if cfg.dataset_config:
-        for key, value in cfg.dataset_config.items():
-            checkpoint.dataset_properties.update(key, value)
+    # Original checkpoint config (frozen, from training)
+    ckpt_data_cfg = checkpoint.data_config
+
+    # Your dataset overrides (from your YAML)
+    custom_overrides = {
+        "task": "custom",
+        "class": "ufg_inference.PLYInferenceDataset",
+        "dataroot": "/dpb/data",
+        "ply_file": "reference_xyz_shift.ply"
+    }
+
+    # Merge to produce a new DictConfig (Hydra-compatible)
+    dataset_cfg = OmegaConf.merge(ckpt_data_cfg, custom_overrides)
 
     # Create dataset and model
     # Set dataloaders
     #dataset = instantiate_dataset(checkpoint.data_config)
-    dataset = instantiate_dataset(cfg.data)
+    dataset = instantiate_dataset(dataset_cfg)
 
-    print("Dataset config:", checkpoint.data_config)
-    print("Dataset class:", train_dataset_cls)
+    #print("Dataset config:", checkpoint.data_config)
+    print("Dataset config:", dataset_cfg)
+    #print("Dataset class:", train_dataset_cls)
+    print("Dataset class:", get_dataset_class(dataset_cfg))
 
     model = checkpoint.create_model(dataset, weight_name=cfg.weight_name)
 

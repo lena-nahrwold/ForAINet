@@ -1,18 +1,33 @@
 # @package data
-class: custom.ufg_inference.PLYInferenceDataset
-dataroot: /dpb/data/reference_xyz.ply
+defaults:
+  - panoptic/default
+
+task: custom
+class: ufg_inference.PLYInferenceDataset
+dataroot: /dpb/data/
+ply_file: reference_xyz_shift.ply
+
 first_subsampling: 0.2
 
 pre_collate_transform:
+  - transform: SaveOriginalPosId
   - transform: GridSampling3D
     params:
-      size: ${data.first_subsampling}
-
+      size: 0.2
+      mode: last
 test_transform:
+  - transform: XYZRelaFeature
+    params: { add_x: True, add_y: True, add_z: True }
+  - transform: XYZFeature
+    params: { add_x: False, add_y: False, add_z: True }
+  - transform: AddFeatsByKeys
+    params:
+      list_add_to_x: [True, True, True, True]
+      feat_names: [pos_x_rela, pos_y_rela, pos_z_rela, pos_z]
+      delete_feats: [True, True, True, True]
+  - transform: Center
   - transform: GridSampling3D
     params:
-      size: ${data.first_subsampling}
+      size: 0.2
       quantize_coords: True
-
-val_transform: ${data.test_transform}
-train_transforms: []
+      mode: last
