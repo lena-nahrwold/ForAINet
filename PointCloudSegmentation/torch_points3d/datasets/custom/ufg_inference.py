@@ -1,100 +1,80 @@
 import os
 import torch
-import numpy as np
-from plyfile import PlyData
-from torch_geometric.data import Data, Dataset as TorchDataset
+from torch_geometric.data import InMemoryDataset
+from torch_geometric.io import read_ply
+
 from torch_points3d.datasets.base_dataset import BaseDataset
+from torch_points3d.metrics.segmentation_tracker import SegmentationTracker
 
-
-# -------------------------------------------------------------------------
-# Empty dataset (TorchPoints3D expects train/val to exist)
-# -------------------------------------------------------------------------
-class EmptyDataset(TorchDataset):
-    def __init__(self):
-        super().__init__("")
-
-    def len(self):
-        return 0
-
-    def get(self, idx):
-        return None
-
-
-# -------------------------------------------------------------------------
-# Single-file PLY loader for inference
-# -------------------------------------------------------------------------
-class SinglePLYDataset(TorchDataset):
-    def __init__(self, root, num_classes=5):
+class EmptyDataset(InMemoryDataset):
+    def __init__(self, root):
         super().__init__(root)
-        self.num_classes_value = num_classes
-        self.files = [f for f in os.listdir(root) if f.endswith(".ply")]
+        # Save empty list
+        self.save([], self.processed_paths[0])
+        self.load(self.processed_paths[0])
 
-    def len(self):
-        return len(self.files)
+    @property
+    def raw_file_names(self):
+        return []
 
-    def get(self, idx):
-        filepath = os.path.join(self.root, self.files[idx])
-        plydata = PlyData.read(filepath)
-        vertices = plydata["vertex"]
+    @property
+    def processed_file_names(self):
+        return ["data.pt"]
 
-        pts = np.vstack([vertices["x"], vertices["y"], vertices["z"]]).T
-        pts = torch.tensor(pts, dtype=torch.float) # [N, 3]
+    def download(self):
+        pass
 
-        fake_feat = torch.ones((pts.shape[0], 1), dtype=torch.float)  # [N, 1]
-        feats = torch.cat([pts, fake_feat], dim=1)  # [N, 4]
-        data = Data(pos=pts, x=feats)
+    def process(self):
+        self.save([], self.processed_paths[0])
 
-        # -----------------------------
-        # REQUIRED FOR PANOPTIC MODELS
-        # -----------------------------
-        data.y = torch.zeros(pts.shape[0], dtype=torch.long)               # dummy semantic labels
-        data.instance_labels = torch.zeros(pts.shape[0], dtype=torch.long) # dummy instance IDs
-        data.num_classes = self.num_classes_value                          # required by BaseDataset.num_classes
+class PLYSingleCloudDataset(InMemoryDataset):
+    def __init__(self, root, ply_path, transform=None, pre_transform=None, pre_filter=None):
+        self.ply_path = ply_path
+        super().__init__(root, transform, pre_transform, pre_filter)
 
-        return data
+        self.load(self.processed_paths[0])
+
+    @property
+    def raw_file_names(self):
+        return [os.path.basename(self.ply_path)]
+
+    @property
+    def processed_file_names(self):
+        return ["data.pt"]
+
+    def download(self):
+        pass
+
+    def process(self):
+        data = read_ply(self.ply_path)
+        data.pos = data.pos.float()
+
+        data_list = [data]
+
+        if self.pre_filter is not None:
+            data_list = [d for d in data_list if self.pre_filter(d)]
+
+        if self.pre_transform is not None:
+            data_list = [self.pre_transform(d) for d in data_list]
+
+        self.save(data_list, self.processed_paths[0])
 
 
-# -------------------------------------------------------------------------
-# TorchPoints3D dataset wrapper
-# -------------------------------------------------------------------------
 class PLYInferenceDataset(BaseDataset):
     def __init__(self, dataset_opt):
         super().__init__(dataset_opt)
 
-        root = dataset_opt.dataroot
+        ply_path = os.path.join(self._data_path, dataset_opt.ply_file)
 
-        # TorchPoints3D expects dataset split:
-        self.train_dataset = EmptyDataset()
-        self.val_dataset = EmptyDataset()
-        self.test_dataset = SinglePLYDataset(root)
+        self.test_dataset = PLYSingleCloudDataset(
+            root=self._data_path,
+            ply_path=ply_path,
+            transform=self.test_transform,
+            pre_transform=self.pre_transform,
+        )
 
-        # Metadata required by PointGroup3heads
-        self._num_classes = 5
+        self.train_dataset = EmptyDataset(self._data_path)
+        self.val_dataset = EmptyDataset(self._data_path)
 
-        self._label_to_names = {
-            0: "ground",
-            1: "tree",
-            2: "fallen_tree",
-            3: "sapling",
-            4: "shrub",
-        }
-
-        self._stuff_classes = [0]      # usually ground
-        self._thing_classes = [1, 2, 3, 4]
-
-    # TorchPoints3D expects these properties:
-    @property
-    def num_classes(self):
-        return self._num_classes
-
-    @property
-    def stuff_classes(self):
-        return self._stuff_classes
-
-    @property
-    def thing_classes(self):
-        return self._thing_classes
-
-    @property
-    def label_to_names(self):
-        return self._label_to_names
+    def get_tracker(self, wandb_log=False, tensorboard_log=False):
+        return SegmentationTracker(self, wandb_log=False, use_tensorboard=False)
