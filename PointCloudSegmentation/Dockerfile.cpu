@@ -1,4 +1,5 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
+FROM ubuntu:20.04
+#FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 # FROM nvidia/cuda:10.2-devel-ubuntu18.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -28,7 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libxext6 \
     libxrender-dev \
     libsndfile1 \
-    python3-pycuda \
     && rm -rf /var/lib/apt/lists/*
 
 RUN python3.8 -m pip install --no-cache-dir --upgrade \
@@ -47,39 +47,31 @@ RUN python3.8 -m pip install --no-cache-dir --upgrade \
     tqdm==4.62.3 \
     wheel==0.37.0
 
-ENV CU_VERSION=cu111
-# 8.0 for BM.GPU4.8, 7.0 for local, 6.0 for P100-SXM2 (Oracle)
-# ENV TORCH_CUDA_ARCH_LIST_VER="6.0+PTX"
-
-# optimized for the Tesla A10's architecture below
-# ENV TORCH_CUDA_ARCH_LIST_VER="8.6+PTX" 
-ENV TORCH_CUDA_ARCH_LIST_VER="6.0;7.0;7.5;8.0;8.6"
-
 
 RUN python3.8 -m pip install --no-cache-dir \
-    torch==1.9.0+${CU_VERSION} \
-    torchvision==0.10.0+${CU_VERSION} \
+    torch==1.9.0\
+    torchvision==0.10.0 \
     torchaudio==0.9.0 \
     -f https://download.pytorch.org/whl/torch_stable.html
 
 RUN python3.8 -m pip install --no-cache-dir \
-    torch-scatter==2.0.8 \
+    torch-scatter==2.0.2 \
     torch-sparse==0.6.12 \
     torch-cluster==1.5.9 \
     torch-spline-conv==1.2.1 \
     torch-geometric==1.7.2 \
-    -f https://data.pyg.org/whl/torch-1.9.0+${CU_VERSION}.html
+    -f https://data.pyg.org/whl/torch-1.9.0.html
 
-RUN TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST_VER} python3.8 -m pip install --no-cache-dir \
+RUN python3.8 -m pip install --no-cache-dir \
     git+https://github.com/NVIDIA/MinkowskiEngine.git \
-    --install-option="--blas=openblas" --install-option="--force_cuda"
+    --install-option="--blas=openblas"
 
-RUN TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST_VER} FORCE_CUDA=1 python3.8 -m pip install --no-cache-dir \
+RUN python3.8 -m pip install --no-cache-dir \
     git+https://github.com/mit-han-lab/torchsparse.git@v1.4.0
 
                                               
 # torch-points3d requirements
-RUN TORCH_CUDA_ARCH_LIST=${TORCH_CUDA_ARCH_LIST_VER} FORCE_CUDA=1 python3.8 -m pip install --no-cache-dir \
+RUN python3.8 -m pip install --no-cache-dir \
     torch-points-kernels==0.7.0 \
     absl-py==0.14.0 \
     addict==2.4.0 \
