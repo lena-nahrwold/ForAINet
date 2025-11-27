@@ -114,6 +114,41 @@ def main(cfg):
     #print("Dataset class:", train_dataset_cls)
     print("Dataset class:", get_dataset_class(dataset_cfg))
 
+    # debug prints: insert right before model = checkpoint.create_model(...)
+    print("=== DEBUG: dataset summary ===")
+    try:
+        print("dataset.feature_dimension:", dataset.feature_dimension)
+    except Exception as e:
+        print("dataset.feature_dimension: ERROR", e)
+
+    try:
+        td = dataset.train_dataset
+        print("train_dataset type:", type(td))
+        if len(td) > 0:
+            d0 = td[0]
+            print("train[0] keys:", d0.keys)
+            print("train[0] pos.shape:", getattr(d0, "pos").shape)
+            print("train[0] x type/shape:", type(getattr(d0, "x", None)), getattr(d0, "x").shape)
+        else:
+            print("train_dataset length is 0")
+    except Exception as e:
+        print("train_dataset inspect error:", e)
+
+    try:
+        td = dataset.test_dataset
+        print("test_dataset type:", type(td))
+        if len(td) > 0:
+            d0 = td[0]
+            print("test[0] keys:", d0.keys)
+            print("test[0] pos.shape:", getattr(d0, "pos").shape)
+            print("test[0] x type/shape:", type(getattr(d0, "x", None)), getattr(d0, "x").shape)
+        else:
+            print("test_dataset length is 0")
+    except Exception as e:
+        print("test_dataset inspect error:", e)
+    print("=== END DEBUG ===")
+
+
     model = checkpoint.create_model(dataset, weight_name=cfg.weight_name)
 
     log.info(model)
