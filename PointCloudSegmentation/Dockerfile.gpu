@@ -55,12 +55,13 @@ RUN export FORCE_CUDA=1; pip install --no-cache-dir \
 
 ENV CXX=c++
 
-# Clone and build MinkowskiEngine with CUDA
-RUN git clone https://github.com/NVIDIA/MinkowskiEngine.git /tmp/MinkowskiEngine \
-    && cd /tmp/MinkowskiEngine \
+# Clone and build MinkowskiEngine with CUDA ## TODO this does not work when building the image
+RUN git clone https://github.com/NVIDIA/MinkowskiEngine.git /MinkowskiEngine \
+    && cd /MinkowskiEngine \
     && git fetch origin pull/567/head:fix-for-cuda-12.2 \
     && git checkout fix-for-cuda-12.2 \
-    && FORCE_CUDA=1 pip install --no-cache-dir .
+    && export FORCE_CUDA=1 \
+    && pip install --no-cache-dir .
 
 RUN git clone --recursive https://github.com/torch-points3d/torch-points-kernels.git /tmp/torch-points-kernels \
     && cd /tmp/torch-points-kernels \

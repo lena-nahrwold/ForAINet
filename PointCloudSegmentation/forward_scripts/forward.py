@@ -6,6 +6,7 @@ import os
 import sys
 import numpy as np
 from typing import Dict
+from plyfile import PlyData, PlyElement
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +42,38 @@ def save(prefix, predicted):
         out_file = filename + "_pred"
         np.save(os.path.join(prefix, out_file), value)
 
+        try:
+            if isinstance(value, np.ndarray) and value.ndim == 2 and value.shape[1] == 4:
+                # Expected format: [x, y, z, label]
+                points = value[:, :3].astype(np.float32)
+                labels = value[:, 3].astype(np.int32)
+
+                N = points.shape[0]
+                vertex_dtype = np.dtype([
+                    ('x', 'f4'),
+                    ('y', 'f4'),
+                    ('z', 'f4'),
+                    ('label', 'i4'),
+                ])
+
+                vertices = np.empty(N, dtype=vertex_dtype)
+                vertices['x'] = points[:, 0]
+                vertices['y'] = points[:, 1]
+                vertices['z'] = points[:, 2]
+                vertices['label'] = labels
+
+                ply = PlyData([PlyElement.describe(vertices, 'vertex')], text=False)
+
+                ply_path = os.path.join(prefix, filename + "_pred.ply")
+                ply.write(ply_path)
+
+                print(f"Saved prediction output to PLY: {ply_path}")
+
+            else:
+                print(f"Skipping PLY export ({key} is not Nx4)")
+        except Exception as e:
+            print(f"PLY export failed for {key}: {e}")
+
 
 def run(model: BaseModel, dataset, device, output_path):
     loaders = dataset.test_dataloaders
@@ -50,6 +83,7 @@ def run(model: BaseModel, dataset, device, output_path):
         loader.dataset.name
         with Ctq(loader) as tq_test_loader:
             for data in tq_test_loader:
+                data.x = data.x[:, :4]
                 with torch.no_grad():
                     model.set_input(data, device)
                     model.forward()
@@ -93,7 +127,7 @@ def main(cfg):
     # Original checkpoint config (frozen, from training)
     ckpt_data_cfg = checkpoint.data_config
 
-    # Your dataset overrides (from your YAML)
+    # Dataset overrides
     custom_overrides = {
         "task": "custom",
         "class": "ufg_inference.PLYInferenceDataset",

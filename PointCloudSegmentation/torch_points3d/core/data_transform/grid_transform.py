@@ -24,7 +24,7 @@ _INTEGER_LABEL_KEYS = ["y", "instance_labels"]
 def shuffle_data(data):
     num_points = data.pos.shape[0]
     shuffle_idx = torch.randperm(num_points)
-    for key in set(data.keys):
+    for key in set(data.keys()): # data.keys monkey patch
         item = data[key]
         if torch.is_tensor(item) and num_points == item.shape[0]:
             data[key] = item[shuffle_idx]
